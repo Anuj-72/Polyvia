@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Polyvia — C++ Compiler</title>
+
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+                overflow: hidden;
+            }
+            #body-container {
+                display: flex;
+                width: 100vw;
+                height: 100vh;
+            }
+            #coding-place {
+                width: 70%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+            #coding-place textarea {
+                flex: 1;
+                width: 100%;
+                resize: none;
+                font-family: monospace;
+                font-size: 14px;
+                padding: 10px;
+            }
+            #coding-place button {
+                padding: 8px 16px;
+                cursor: pointer;
+            }
+
+            /* Right panel */
+            #right-panel {
+                width: 30%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                background: #000;
+            }
+
+            /* Mode toggle bar */
+            #mode-toggle-bar {
+                display: flex;
+                flex-shrink: 0;
+                background: #1a1a1a;
+            }
+            #mode-toggle-bar button {
+                flex: 1;
+                padding: 8px 0;
+                border: none;
+                background: transparent;
+                color: #888;
+                font-size: 13px;
+                cursor: pointer;
+            }
+            #mode-toggle-bar button.active {
+                background: #000;
+                color: #fff;
+                border-bottom: 2px solid #5eff9b;
+            }
+
+            /* Terminal */
+            #terminal {
+                flex: 1;
+                overflow: hidden;
+            }
+
+            /* Stdin panel */
+            #stdin-panel {
+                flex: 1;
+                display: none;
+                flex-direction: column;
+            }
+            #stdin-input {
+                flex: 1;
+                resize: none;
+                background: #111;
+                color: #e2e2e2;
+                font-family: monospace;
+                font-size: 13px;
+                padding: 10px;
+                border: none;
+                border-bottom: 1px solid #222;
+                outline: none;
+            }
+            #stdin-output {
+                flex: 1;
+                overflow-y: auto;
+                background: #0d0d0d;
+                color: #e2e2e2;
+                font-family: monospace;
+                font-size: 13px;
+                padding: 10px;
+                white-space: pre-wrap;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="body-container">
+
+            <div id="coding-place">
+                <button id="runBtn">Run</button>
+                <textarea
+                    id="editor"
+                    spellcheck="false"
+                    placeholder="Write your C++ code here..."
+                ></textarea>
+            </div>
+
+            <div id="right-panel">
+
+                <!-- Mode toggle -->
+                <div id="mode-toggle-bar">
+                    <button id="mode-toggle-interactive" class="active">Interactive</button>
+                    <button id="mode-toggle-stdin">Stdin</button>
+                </div>
+
+                <!-- Interactive mode — xterm terminal -->
+                <div id="terminal" tabindex="-1"></div>
+
+                <!-- Stdin mode — input + output -->
+                <div id="stdin-panel">
+                    <textarea
+                        id="stdin-input"
+                        placeholder="Enter your program input here..."
+                        spellcheck="false"
+                    ></textarea>
+                    <div id="stdin-output">Output will appear here...</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="index.js"></script>
+    </body>
+</html>
