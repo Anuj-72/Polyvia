@@ -1,6 +1,7 @@
 const DOCKER_INTERACTIVE_ARGS = (pathTemp) => [
     "run",
     "-i",
+    "-t",
     "--rm",
     "--memory",
     "256m",
@@ -18,12 +19,14 @@ const DOCKER_INTERACTIVE_ARGS = (pathTemp) => [
     "none",
     "--cap-drop",
     "ALL",
+    "--env",
+    "TERM=xterm-256color",
     "-v",
     `${pathTemp}/main.cpp:/code/main.cpp`,
     "judge-interactive",
     "bash",
     "-c",
-    "g++ /code/main.cpp -o /tmp/main && /tmp/main",
+    "g++ /code/main.cpp -o /tmp/main && rlwrap /tmp/main",
 ];
 
 const DOCKER_STDIN_COMMAND = (pathTemp) =>
