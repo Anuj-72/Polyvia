@@ -7,6 +7,7 @@ const express = require("express");
 const { Server } = require("socket.io");
 const logger = require("./utils/logger");
 const stdinHandler = require("./handlers/stdinHandler");
+const { httpLimiter } = require("./middleware/rateLimiter");
 const { onCompleted, onFailed } = require("../redis/queue-events");
 const interactiveHandler = require("./handlers/interactiveHandler");
 
@@ -14,6 +15,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+app.use(httpLimiter);
 app.use(express.static(path.join(__dirname, "../frontend")));
 // ==================================| IMPORTS END |======================================
 

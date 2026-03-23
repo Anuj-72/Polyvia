@@ -5,8 +5,34 @@ const logger = require("../utils/logger");
 const EXIT_CODE_MAP = require("../utils/exitCodes");
 const { DOCKER_INTERACTIVE_ARGS } = require("../utils/dockerCommands");
 
+const submissionToken = new Map();
+const MAX_TOKENS = 10;
+const REFILL_RATE = 6000;
+
 module.exports = (socket, activeSessions) => {
+    submissionToken.set(socket.id, MAX_TOKENS);
+
+    const refill = setInterval(() => {
+        const curr = submissionToken.get(socket.id) ?? MAX_TOKENS;
+        submissionToken.set(socket.id, Math.min(curr + 1, MAX_TOKENS));
+    }, REFILL_RATE);
+
     socket.on("run", (data) => {
+        const tokens = submissionToken.get(socket.id) ?? MAX_TOKENS;
+
+        if (tokens <= 0) {
+            logger.warn("Socket submission limit exceeded", {
+                socketId: socket.id,
+            });
+            socket.emit(
+                "LTE-interactive",
+                "Submission limit exhausted — wait a moment",
+            );
+            return;
+        }
+
+        submissionToken.set(socket.id, Math.max(0, tokens - 1));
+
         const existing = activeSessions.get(socket.id);
         if (existing) existing.cleanup();
 
@@ -85,5 +111,10 @@ module.exports = (socket, activeSessions) => {
                 });
             }
         });
+    });
+
+    socket.on("disconnect", () => {
+        clearInterval(refill);
+        submissionToken.delete(socket.id);
     });
 };

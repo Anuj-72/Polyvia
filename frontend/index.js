@@ -74,6 +74,16 @@ document.getElementById("runBtn").addEventListener("click", () => handleRun());
 
 // Writing the data recieved from the backend onto xterm
 
+socket.on("LTE-stdin", (message) => {
+    console.log("GOT LTE", message);
+    document.getElementById("stdin-output").textContent = message;
+});
+
+socket.on("LTE-interactive", (message) => {
+    console.log("GOT LET", message);
+    term.writeln("\r\n" + message);
+});
+
 socket.on("RTE", (message) => {
     term.writeln(message);
 });
