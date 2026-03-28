@@ -45,4 +45,4 @@ const onFailed = (io) => {
     });
 };
 
-module.exports = { onCompleted, onFailed };
+module.exports = { onCompleted, onFailed, stdinQueueEvents };

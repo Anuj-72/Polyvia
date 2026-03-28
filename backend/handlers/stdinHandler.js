@@ -44,6 +44,11 @@ module.exports = (socket) => {
             socketID: socket.id,
         });
 
+        socket.emit(
+            "QUEUED-stdin",
+            `Submission Queued, your code will be executed soon`,
+        );
+
         logger.info("Stdin job queued", { socketId: socket.id, codeID });
     });
 

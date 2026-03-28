@@ -8,6 +8,7 @@ const { Server } = require("socket.io");
 const logger = require("./utils/logger");
 const healthCheck = require("./middleware/healthCheck");
 const stdinHandler = require("./handlers/stdinHandler");
+const graceShutdown = require("./utils/graceShutdown");
 const { httpLimiter } = require("./middleware/rateLimiter");
 const { onCompleted, onFailed } = require("../redis/queue-events");
 const interactiveHandler = require("./handlers/interactiveHandler");
@@ -19,12 +20,15 @@ const io = new Server(server);
 app.get("/health", healthCheck);
 app.use(httpLimiter);
 app.use(express.static(path.join(__dirname, "../frontend")));
-// ==================================| IMPORTS END |======================================
+// ==================================| IMPORTS END |=======================================
 
 const activeSessions = new Map();
 
 onCompleted(io);
 onFailed(io);
+
+process.on("SIGTERM", () => graceShutdown({ server, io, activeSessions }));
+process.on("SIGINT", () => graceShutdown({ server, io, activeSessions }));
 
 io.on("connection", (socket) => {
     logger.info("New client connected", { socketId: socket.id });

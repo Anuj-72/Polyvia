@@ -1,3 +1,4 @@
+const fs = require("fs");
 const util = require("util");
 const { Worker } = require("bullmq");
 const { exec } = require("child_process");
@@ -6,6 +7,14 @@ const redisConnection = require("./redis-connection");
 const { DOCKER_STDIN_COMMAND } = require("../backend/utils/dockerCommands");
 
 const execPromise = util.promisify(exec);
+
+const gracefulShutdown = async (signal) => {
+    logger.info("Worker graceful shutdown initiated");
+    await worker.close(); // waits for active jobs to complete
+    await redisConnection.quit();
+    logger.info("Worker shutdown complete");
+    process.exit(0);
+};
 
 const worker = new Worker(
     "stdin-jobs",
@@ -34,11 +43,18 @@ const worker = new Worker(
                 error: err.stderr || err.message,
                 socketID: socketID,
             };
+        } finally {
+            fs.rmSync(pathTemp, { recursive: true, force: true });
+            logger.info("Job cleanup complete", { pathTemp, socketID });
         }
     },
     {
         connection: redisConnection,
+        concurrency: parseInt(process.env.WORKER_CONCURRENCY) || 4,
     },
 );
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 module.exports = worker;
