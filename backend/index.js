@@ -7,9 +7,9 @@ const express = require("express");
 const { Server } = require("socket.io");
 const logger = require("./utils/logger");
 const healthCheck = require("./middleware/healthCheck");
-const stdinHandler = require("./handlers/stdinHandler");
 const graceShutdown = require("./utils/graceShutdown");
 const { httpLimiter } = require("./middleware/rateLimiter");
+const { stdinHandler } = require("./handlers/stdinHandler");
 const { onCompleted, onFailed } = require("../redis/queue-events");
 const interactiveHandler = require("./handlers/interactiveHandler");
 

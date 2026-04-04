@@ -74,10 +74,6 @@ document.getElementById("runBtn").addEventListener("click", () => handleRun());
 
 // Writing the data recieved from the backend onto xterm
 
-socket.on("QUEUED-stdin", (message) => {
-    document.getElementById("stdin-output").textContent = message;
-});
-
 socket.on("QUEUED-interactive", (message) => {
     term.clear();
     term.writeln(message);

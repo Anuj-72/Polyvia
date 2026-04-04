@@ -1,7 +1,10 @@
-const stdinQueue = require("./queue");
-const { QueueEvents, Job } = require("bullmq");
+const { QueueEvents } = require("bullmq");
 const logger = require("../backend/utils/logger");
 const redisConnection = require("./redis-connection");
+const {
+    codeToSocket,
+    runningJobs,
+} = require("../backend/handlers/stdinHandler");
 
 const stdinQueueEvents = new QueueEvents("stdin-jobs", {
     connection: redisConnection,
@@ -11,37 +14,45 @@ const onCompleted = (io) => {
     stdinQueueEvents.on("completed", ({ jobId, returnvalue }) => {
         if (!returnvalue) return;
 
+        const socketID = codeToSocket.get(jobId);
+
+        if (!socketID) {
+            logger.warn("Socket not found for jobID", { jobId: jobId });
+            return;
+        }
+
         logger.info("Stdin job completed", {
             jobId,
-            socketId: returnvalue.socketID,
+            socketId: socketID,
         });
 
-        io.to(returnvalue.socketID).emit("stdin-result", {
+        io.to(socketID).emit("stdin-result", {
             output: returnvalue.output,
             error: returnvalue.error,
         });
+
+        runningJobs.delete(socketID);
+        codeToSocket.delete(jobId);
     });
 };
 
 const onFailed = (io) => {
     stdinQueueEvents.on("failed", async ({ jobId, failedReason }) => {
         logger.error("Job failed", { jobId, failedReason });
+        const socketID = codeToSocket.get(jobId);
 
-        try {
-            const job = await Job.fromId(stdinQueue, jobId);
-
-            if (job) {
-                const socketID = job.data.socketID;
-                io.to(socketID).emit("stdin-result", {
-                    output: "",
-                    error: `Job Failed: ${failedReason}`,
-                });
-            }
-        } catch (error) {
-            logger.error("Couldn't fetch failed Job Data", {
-                error: error.message,
-            });
+        if (!socketID) {
+            logger.warn("Socket not found for jobID", { jobId: jobId });
+            return;
         }
+
+        io.to(socketID).emit("stdin-result", {
+            output: "",
+            error: `Job Failed: ${failedReason}`,
+        });
+
+        runningJobs.delete(socketID);
+        codeToSocket.delete(jobId);
     });
 };
 
